@@ -13,7 +13,7 @@
     let currentSearchWord = "";
     let currentSearchOccurrences = 0;
     let renderedResultCount = 0;
-    const RENDER_CHUNK_SIZE = 200;
+    const RENDER_CHUNK_SIZE = 150;
     let isSearchActive = false;
     let renderTimer = null;
 
@@ -137,9 +137,7 @@
         });
     });
 
-    // 💡 소수점 오차(Sub-pixel) 누적 방지 및 제목/여백 포함 완벽 동기화 함수
     function alignVerseHeights() {
-        // 'p' 태그뿐만 아니라 제목(h2), 여백(div) 등 data-verse-id를 가진 모든 요소를 선택합니다.
         const krElements = document.querySelectorAll('#output-kr [data-verse-id]');
         const enElements = document.querySelectorAll('#output-en [data-verse-id]');
         
@@ -158,7 +156,6 @@
             const enEl = enElements[i]; 
             
             if (krEl && enEl) {
-                // offsetHeight 대신 getBoundingClientRect().height를 사용하여 소수점 픽셀까지 정밀 계산합니다.
                 const krHeight = krEl.getBoundingClientRect().height;
                 const enHeight = enEl.getBoundingClientRect().height;
                 maxHeights.push(Math.max(krHeight, enHeight));
@@ -265,7 +262,6 @@
         const versesEn = (bibleDataEn[bookName] && bibleDataEn[bookName][chapter]) ? bibleDataEn[bookName][chapter] : {};
         const enBookName = bibleBooks.find(b => b.name === bookName)?.enName || bookName;
         
-        // 💡 챕터 제목(h2)에도 data-verse-id 추가
         let outputKr = `<h2 class="chapter-title" data-verse-id="header">${bookName} ${chapter}${bookName==="시편"?"편":"장"}</h2>`;
         let outputEn = `<h2 class="chapter-title" data-verse-id="header">${enBookName} ${chapter}</h2>`;
         
@@ -339,7 +335,6 @@
             return;
         }
         
-        // 💡 검색 요약 문구(헤더)에도 data-verse-id 추가
         outputKrDiv.innerHTML = `<p class="search-header" data-verse-id="header" style="font-size: 1.2em; font-weight: bold;">'${word}'이(가) ${results.length}개의 구절에서 총 ${totalOccurrences}번 등장합니다.</p>`;
         outputEnDiv.innerHTML = `<p class="search-header" data-verse-id="header" style="font-size: 1.2em; font-weight: bold; color: transparent; user-select: none;">'${word}'이(가) ${results.length}개의 구절에서 총 ${totalOccurrences}번 등장합니다.</p>`;
         
@@ -405,6 +400,11 @@
                 case 'double-short-quote':
                     pKr = `<p data-verse-id="${uniqueId}">『${highlightedKr}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verse}">(${abbr} ${chapter}:${verse})</span></p>`;
                     pEn = `<p data-verse-id="${uniqueId}">『${highlightedEn}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verse}">(${enAbbr} ${chapter}:${verse})</span></p>`;
+                    break;
+                // 💡 단어 검색 시 장절 연속 모드는 구절이 흩어져 있으므로 기본 약식 형태로 출력
+                case 'sequence':
+                    pKr = `<p data-verse-id="${uniqueId}"><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verse}">${abbr} ${chapter}:${verse}</span> ${highlightedKr}</p>`;
+                    pEn = `<p data-verse-id="${uniqueId}"><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verse}">${enAbbr} ${chapter}:${verse}</span> ${highlightedEn}</p>`;
                     break;
             }
             outputKr += pKr;
@@ -583,11 +583,29 @@
                         pKr = `<p data-verse-id="${uniqueId}">『${combinedKr}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verseNums.join(',')}">(${abbr} ${chapter}:${verseRef})</span></p>`;
                         pEn = `<p data-verse-id="${uniqueId}">『${combinedEn}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${verseNums.join(',')}">(${enAbbr} ${chapter}:${verseRef})</span></p>`;
                         break; 
+                    // 💡 새롭게 추가된 장절 연속 모드 로직 (첫 구절만 '책이름 장:절', 이후는 '장:절')
+                    case 'sequence': {
+                        let krSeq = "";
+                        let enSeq = "";
+                        groupVerses.sort((a, b) => a.verse - b.verse).forEach((v, vIdx) => {
+                            const tKr = bibleData[book]?.[chapter]?.[v.verse] || "";
+                            const tEn = bibleDataEn[book]?.[chapter]?.[v.verse] || "";
+                            if (vIdx === 0) {
+                                krSeq += `<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${v.verse}">${abbr} ${chapter}:${v.verse}</span> ${tKr}`;
+                                enSeq += `<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${v.verse}">${enAbbr} ${chapter}:${v.verse}</span> ${tEn}`;
+                            } else {
+                                krSeq += `<br><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${v.verse}">${chapter}:${v.verse}</span> ${tKr}`;
+                                enSeq += `<br><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verses="${v.verse}">${chapter}:${v.verse}</span> ${tEn}`;
+                            }
+                        });
+                        pKr = `<p data-verse-id="${uniqueId}">${krSeq}</p>`;
+                        pEn = `<p data-verse-id="${uniqueId}">${enSeq}</p>`;
+                        break;
+                    }
                 }
                 outputKr += pKr;
                 outputEn += pEn;
 
-                // 💡 결과 사이의 여백(div)에도 data-verse-id 추가
                 if (verseGroups.length > 1 && groupIndex < verseGroups.length - 1) {
                     outputKr += `<div style="margin: 10px 0;" data-verse-id="spacer-${groupIndex}"></div>`;
                     outputEn += `<div style="margin: 10px 0;" data-verse-id="spacer-${groupIndex}"></div>`;
@@ -632,6 +650,11 @@
                         pKr = `<p data-verse-id="${uniqueId}">『${textKr}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verse="${verseNum}" data-verses="${verseNum}">(${abbr} ${chapter}:${verseNum})</span></p>`;
                         pEn = `<p data-verse-id="${uniqueId}">『${textEn}』<span class="reference" data-book="${book}" data-chapter="${chapter}" data-verse="${verseNum}" data-verses="${verseNum}">(${enAbbr} ${chapter}:${verseNum})</span></p>`;
                         break; 
+                    // 💡 예비 로직용
+                    case 'sequence':
+                        pKr = `<p data-verse-id="${uniqueId}"><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verse="${verseNum}" data-verses="${verseNum}">${abbr} ${chapter}:${verseNum}</span> ${textKr}</p>`;
+                        pEn = `<p data-verse-id="${uniqueId}"><span class="reference" data-book="${book}" data-chapter="${chapter}" data-verse="${verseNum}" data-verses="${verseNum}">${enAbbr} ${chapter}:${verseNum}</span> ${textEn}</p>`;
+                        break;
                 }
                 outputKr += pKr;
                 outputEn += pEn;
@@ -748,12 +771,15 @@
             else if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redoAction(); }
         });
 
+        // 💡 모든 출력 모드 이벤트 리스너 세팅
         document.getElementById('standard-format').addEventListener('click', () => changeDisplayMode('standard'));
         document.getElementById('abbr-format').addEventListener('click', () => changeDisplayMode('abbr'));
         document.getElementById('quote-format').addEventListener('click', () => changeDisplayMode('quote'));
         document.getElementById('short-quote-format').addEventListener('click', () => changeDisplayMode('short-quote'));
         document.getElementById('double-quote-format').addEventListener('click', () => changeDisplayMode('double-quote'));
         document.getElementById('double-short-quote-format').addEventListener('click', () => changeDisplayMode('double-short-quote'));
+        // 새 모드 리스너 추가
+        document.getElementById('sequence-format').addEventListener('click', () => changeDisplayMode('sequence'));
     }
 
     function saveState() {
@@ -839,7 +865,7 @@
         setTimeout(alignVerseHeights, 10);
     }
 
-function prepareContentForCopy(outputElement) {
+    function prepareContentForCopy(outputElement) {
         const clone = outputElement.cloneNode(true);
         clone.querySelectorAll('br').forEach(br => {
             const newline = document.createTextNode('\n');
@@ -855,7 +881,6 @@ function prepareContentForCopy(outputElement) {
         
         const paras = Array.from(clone.querySelectorAll('p'));
         if (paras.length > 0) {
-            // 💡 핵심 로직: 검색 모드면 두 줄(\n\n) 띄우고, 읽기 모드면 한 줄(\n)만 띄우기
             const lineBreak = isSearchActive ? '\n\n' : '\n';
             return paras.map(p => p.innerText.trim()).join(lineBreak).trim();
         }
@@ -942,6 +967,4 @@ function prepareContentForCopy(outputElement) {
                 }
                 document.body.removeChild(tempTextArea);
             });
-
     }
-
