@@ -277,8 +277,8 @@
             const verseNumClass = isHighlighted ? 'verse-number verse-highlight' : 'verse-number';
             const uniqueId = `verse-${bookName}-${chapter}-${verseNum}`;
             
-            outputKr += `<p data-verse-id="${uniqueId}"><span class="${verseNumClass}" style="cursor: pointer;" onclick="executeSearch('${bookName} ${chapter}:${verseNum}')" title="${bookName} ${chapter}:${verseNum} 출력 모드로 보기">${verseNum}</span> ${verseTextKr}</p>`;
-            outputEn += `<p data-verse-id="${uniqueId}"><span class="${verseNumClass}" style="cursor: pointer;" onclick="executeSearch('${enBookName} ${chapter}:${verseNum}')" title="${enBookName} ${chapter}:${verseNum} View">${verseNum}</span> ${verseTextEn}</p>`;
+            outputKr += `<p data-verse-id="${uniqueId}"><span class="${verseNumClass}" style="cursor: pointer;" onclick="executeSearch('${bookName} ${chapter}:${verseNum}')" title="${bookName} ${chapter}:${verseNum} 출력 모드로 보기">${chapter}:${verseNum}</span> ${verseTextKr}</p>`;
+            outputEn += `<p data-verse-id="${uniqueId}"><span class="${verseNumClass}" style="cursor: pointer;" onclick="executeSearch('${enBookName} ${chapter}:${verseNum}')" title="${enBookName} ${chapter}:${verseNum} View">${chapter}:${verseNum}</span> ${verseTextEn}</p>`;
         }
         
         document.getElementById('output-kr').innerHTML = outputKr;
@@ -937,4 +937,5 @@
                 }
                 document.body.removeChild(tempTextArea);
             });
+
     }
