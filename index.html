@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>성경 뷰어</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="main-container">
+    <div class="sidebar" id="sidebar">
+        </div>
+    <div class="content-area">
+        <div class="search-area">
+            <input type="text" id="search-input" placeholder="단어 검색 또는 구절 검색 (예: 창 1:1, Gen1.1, 1 cor 13:1, 하나님)">
+            <button class="button" id="search-button">검색</button>
+            <button class="button" id="copy-kr-button">복사(한글)</button>
+            <button class="button" id="copy-en-button">복사(영어)</button>
+        </div>
+        
+        <div class="controls-container">
+            <div class="navigation-buttons hidden" id="navigation-buttons">
+                <button class="button" id="prev-chapter">이전 장</button>
+                <button class="button" id="next-chapter">다음 장</button>
+            </div>
+            <div class="lang-buttons">
+                <button class="lang-button active" id="lang-kr">한글 모드</button>
+                <button class="lang-button" id="lang-kren">한영 모드</button>
+            </div>
+        </div>
+
+        <div class="format-buttons">
+            <button class="format-button active" id="standard-format">기본 모드</button>
+            <button class="format-button" id="abbr-format">기본 약식 모드</button>
+            <button class="format-button" id="quote-format">인용 모드</button>
+            <button class="format-button" id="short-quote-format">인용 약식 모드</button>
+            <button class="format-button" id="double-quote-format">겹낫표 인용 모드</button>
+            <button class="format-button" id="double-short-quote-format">겹낫표 인용 약식 모드</button>
+        </div>
+        
+        <div class="output-container" id="output-wrapper">
+            <div id="output-kr" class="output-pane font-malgun"></div>
+            <div id="output-en" class="output-pane font-malgun hidden"></div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-notification" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
