@@ -839,7 +839,7 @@
         setTimeout(alignVerseHeights, 10);
     }
 
-    function prepareContentForCopy(outputElement) {
+function prepareContentForCopy(outputElement) {
         const clone = outputElement.cloneNode(true);
         clone.querySelectorAll('br').forEach(br => {
             const newline = document.createTextNode('\n');
@@ -852,8 +852,13 @@
         highlights.forEach(h => h.outerHTML = h.textContent);
         const headings = clone.querySelectorAll('h1, h2, h3, h4, h5, h6');
         headings.forEach(h => h.outerHTML = h.textContent + '\n');
+        
         const paras = Array.from(clone.querySelectorAll('p'));
-        if (paras.length > 0) return paras.map(p => p.innerText.trim()).join('\n\n').trim();
+        if (paras.length > 0) {
+            // 💡 핵심 로직: 검색 모드면 두 줄(\n\n) 띄우고, 읽기 모드면 한 줄(\n)만 띄우기
+            const lineBreak = isSearchActive ? '\n\n' : '\n';
+            return paras.map(p => p.innerText.trim()).join(lineBreak).trim();
+        }
         return clone.innerText.trim();
     }
     
@@ -939,3 +944,4 @@
             });
 
     }
+
