@@ -780,6 +780,32 @@
         document.getElementById('double-short-quote-format').addEventListener('click', () => changeDisplayMode('double-short-quote'));
         // 새 모드 리스너 추가
         document.getElementById('sequence-format').addEventListener('click', () => changeDisplayMode('sequence'));
+        document.addEventListener('copy', (e) => {
+            const selection = document.getSelection();
+            if (!selection.rangeCount) return;
+
+            // 현재 선택(드래그)한 곳이 성경 본문 출력창 내부인지 확인
+            let node = selection.anchorNode;
+            let isInsideOutput = false;
+            while (node && node !== document.body && node !== document) {
+                if (node.id === 'output-wrapper' || (node.classList && node.classList.contains('output-pane'))) {
+                    isInsideOutput = true;
+                    break;
+                }
+                node = node.parentNode;
+            }
+
+            // 출력창 내부를 드래그했고, 검색 모드가 아닌 '본문 읽기 모드'일 때 작동
+            if (isInsideOutput && !isSearchActive) {
+                let copiedText = selection.toString();
+                // 브라우저가 마음대로 넣은 2줄 띄어쓰기(\n\n)를 1줄(\n)로 강제 압축
+                copiedText = copiedText.replace(/(?:\r?\n){2,}/g, '\n');
+                
+                // 수정한 텍스트를 클립보드에 몰래 덮어씌움
+                e.clipboardData.setData('text/plain', copiedText);
+                e.preventDefault(); 
+            }
+        });
     }
 
     function saveState() {
@@ -968,3 +994,4 @@
                 document.body.removeChild(tempTextArea);
             });
     }
+
